@@ -1,29 +1,50 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { Stack } from "expo-router";
+import { useFonts } from "expo-font";
+import { useEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import AppNavigator from "../components/AppNavigator.jsx";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+// Prevent the splash screen from auto-hiding before asset loading is complete
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [appIsReady, setAppIsReady] = useState(false);
+
+  const [fontsLoaded] = useFonts({
+    "black": require("../assets/fonts/Outfit-Black.ttf"),
+    "bold": require("../assets/fonts/Outfit-Bold.ttf"),
+    "extrabold": require("../assets/fonts/Outfit-ExtraBold.ttf"),
+    "extralight": require("../assets/fonts/Outfit-ExtraLight.ttf"),
+    "medium": require("../assets/fonts/Outfit-Medium.ttf"),
+    "regular": require("../assets/fonts/Outfit-Regular.ttf"),
+    "light": require("../assets/fonts/Outfit-Light.ttf"),
+    "thin": require("../assets/fonts/Outfit-Thin.ttf"),
+    "semibold": require("../assets/fonts/Outfit-SemiBold.ttf"),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Pre-load fonts, make any API calls you need to do here
+        if (fontsLoaded) {
+          // Artificially delay for 1 second to simulate a slow loading experience
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setAppIsReady(true);
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        // Tell the application to render
+        await SplashScreen.hideAsync();
+      }
+    }
+
+    prepare();
+  }, [fontsLoaded]);
+
+  if (!appIsReady || !fontsLoaded) {
     return null;
   }
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  return <AppNavigator />;
 }
