@@ -2,127 +2,164 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Statu
 import React, { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated'
+import Animated, {  
+  FadeInUp,
+  ZoomIn,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  withRepeat,
+  Easing
+} from 'react-native-reanimated'
+
+// Import tab components
+import DashboardTab from './tabs/secondary/DashboardTab'
+import MembersTab from './tabs/secondary/MembersTab'
+import MaintenanceTab from './tabs/secondary/MaintenanceTab'
+import VisitorsTab from './tabs/secondary/VisitorsTab'
+import StaffTab from './tabs/secondary/StaffTab'
 
 const { width, height } = Dimensions.get('window')
 
 export default function SecondaryDashboard({ userData, onLogout }) {
   const [selectedTab, setSelectedTab] = useState(0)
+  const headerAnimation = useSharedValue(0)
+  const pulseAnimation = useSharedValue(1)
 
-  const dashboardCards = [
-    {
-      id: 1,
-      title: 'My Payments',
-      icon: 'card',
-      color: '#4CAF50',
-      count: '₹5,200',
-      subtitle: 'This Month',
-      options: [
-        { name: 'View Payment History', icon: 'time' },
-        { name: 'Download Receipt', icon: 'download' },
-        { name: 'Payment Reminders', icon: 'notifications' }
-      ]
-    },
-    {
-      id: 2,
-      title: 'Visitors',
-      icon: 'car',
-      color: '#FF6B6B',
-      count: '3',
-      subtitle: 'Today',
-      options: [
-        { name: 'Add Visitor', icon: 'person-add' },
-        { name: 'My Visitor Log', icon: 'clipboard' },
-        { name: 'Pre-approve Guests', icon: 'checkmark-circle' }
-      ]
-    },
-    {
-      id: 3,
-      title: 'Community',
-      icon: 'chatbubbles',
-      color: '#9C27B0',
-      count: '12',
-      subtitle: 'New Messages',
-      options: [
-        { name: 'Community Chat', icon: 'chatbubbles' },
-        { name: 'Announcements', icon: 'megaphone' },
-        { name: 'Event Updates', icon: 'calendar' }
-      ]
+  React.useEffect(() => {
+    headerAnimation.value = withTiming(1, { duration: 1200 })
+    pulseAnimation.value = withRepeat(
+      withTiming(1.1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    )
+  }, [])
+
+  const welcomeGreeting = () => {
+    const hours = new Date().getHours();
+    if ( hours >= 5 && hours < 12) {
+      return 'Good Morning'
+    } else if (hours >= 12 && hours < 18) {
+      return 'Good Afternoon'
+    } else {
+      return 'Good Evening'
     }
-  ]
+  }
 
   const bottomTabs = [
-    { name: 'Home', icon: 'home', id: 0 },
-    { name: 'Payments', icon: 'card', id: 1 },
-    { name: 'Profile', icon: 'person', id: 2 }
+    { name: 'Dashboard', icon: 'grid', id: 0 },
+    { name: 'Members', icon: 'people', id: 1 },
+    { name: 'Maintenance', icon: 'card', id: 2 },
+    { name: 'Visitors', icon: 'car-sport', id: 3 },
+    { name: 'Staff', icon: 'people-circle', id: 4 },
   ]
 
-  const renderDashboardCard = (card, index) => (
-    <Animated.View
-      key={card.id}
-      entering={FadeInDown.delay(index * 200)}
-      style={styles.cardContainer}
-    >
-      <LinearGradient
-        colors={[card.color, `${card.color}CC`]}
-        style={styles.cardGradient}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardIconContainer}>
-            <Ionicons name={card.icon} size={30} color="#ffffff" />
-          </View>
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle}>{card.title}</Text>
-            <Text style={styles.cardCount}>{card.count}</Text>
-            <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+  const getTabTitle = () => {
+    switch(selectedTab) {
+      case 0: return 'Dashboard Overview'
+      case 1: return 'Members Management'
+      case 2: return 'Maintenance & Bills'
+      case 3: return 'Visitor Management'
+      case 4: return 'Staff Management'
+      default: return 'Dashboard Overview'
+    }
+  }
 
-      <View style={styles.cardOptions}>
-        {card.options.map((option, optionIndex) => (
-          <TouchableOpacity
-            key={optionIndex}
-            style={styles.optionButton}
-            onPress={() => console.log(`${card.title} - ${option.name}`)}
-          >
-            <Ionicons name={option.icon} size={20} color={card.color} />
-            <Text style={[styles.optionText, { color: card.color }]}>
-              {option.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </Animated.View>
-  )
+  const getTabSubtitle = () => {
+    switch(selectedTab) {
+      case 0: return 'Welcome back to your society dashboard'
+      case 1: return 'Manage all society members and residents'
+      case 2: return 'Track payments and maintenance records'
+      case 3: return 'Monitor and manage visitor entries'
+      case 4: return 'Oversee staff and their activities'
+      default: return 'Welcome back to your society dashboard'
+    }
+  }
+
+  const renderTabContent = () => {
+    switch(selectedTab) {
+      case 0:
+        return <DashboardTab userData={userData} />
+      case 1:
+        return <MembersTab userData={userData} />
+      case 2:
+        return <MaintenanceTab userData={userData} />
+      case 3:
+        return <VisitorsTab userData={userData} />
+      case 4:
+        return <StaffTab userData={userData} />
+      default:
+        return <DashboardTab userData={userData} />
+    }
+  }
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(headerAnimation.value, [0, 1], [0, 1])
+    const translateY = interpolate(headerAnimation.value, [0, 1], [-30, 0])
+    
+    return {
+      opacity,
+      transform: [{ translateY }]
+    }
+  })
+
+  const pulseStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pulseAnimation.value }]
+    }
+  })
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
       {/* Header */}
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={['#667eea', '#764ba2', '#f093fb']}
         style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.welcomeText}>Hello!</Text>
-            <Text style={styles.userName}>{userData?.name || 'Secondary User'}</Text>
-            <Text style={styles.userRole}>Family Member</Text>
+        <Animated.View style={[styles.headerContent, headerAnimatedStyle]}>
+          <View style={styles.headerLeft}>
+            <Animated.View entering={FadeInUp.delay(200)}>
+              <Text style={styles.welcomeText}>{welcomeGreeting()}</Text>
+              <Text style={styles.userName}>{userData?.name || 'Society'}</Text>
+              <Text style={styles.userRole}>Society Secondary Administrator</Text>
+            </Animated.View>
+            <Animated.View entering={FadeInUp.delay(400)} style={styles.dateContainer}>
+              <Ionicons name="calendar-outline" size={16} color="#ffffff" />
+              <Text style={styles.dateText}>
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </Text>
+            </Animated.View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-            <Ionicons name="log-out" size={24} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
+          <Animated.View entering={ZoomIn.delay(600)} style={pulseStyle}>
+            <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+              <Ionicons name="log-out-outline" size={24} color="#ffffff" />
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
       </LinearGradient>
 
-      {/* Dashboard Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.dashboardGrid}>
-          {dashboardCards.map((card, index) => renderDashboardCard(card, index))}
-        </View>
-      </ScrollView>
+      {/* Tab Header */}
+      <Animated.View 
+        entering={FadeInUp.delay(800)}
+        style={styles.tabHeader}
+      >
+        <Text style={styles.tabTitle}>{getTabTitle()}</Text>
+        <Text style={styles.tabSubtitle}>{getTabSubtitle()}</Text>
+      </Animated.View>
+
+      {/* Tab Content */}
+      <View style={styles.tabContent}>
+        {renderTabContent()}
+      </View>
 
       {/* Bottom Tab Bar */}
       <View style={styles.bottomTabContainer}>
@@ -155,131 +192,107 @@ export default function SecondaryDashboard({ userData, onLogout }) {
   )
 }
 
-// ... styles remain the same as PrimaryDashboard
 const styles = StyleSheet.create({
-  // ... copy all styles from PrimaryDashboard
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
   },
   header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 10,
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+  },
+  headerLeft: {
+    flex: 1,
   },
   welcomeText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
     opacity: 0.9,
-    fontFamily: 'medium',
+    fontWeight: '600',
+    fontFamily: 'outfit-medium',
   },
   userName: {
     color: '#ffffff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    fontFamily: 'bold',
-    marginTop: 4,
+    fontSize: 32,
+    fontWeight: '800',
+    fontFamily: 'outfit-bold',
+    marginTop: 6,
+    marginBottom: 4,
   },
   userRole: {
     color: '#ffffff',
-    fontSize: 14,
-    opacity: 0.8,
-    fontFamily: 'regular',
+    fontSize: 16,
+    opacity: 0.85,
+    fontWeight: '500',
+    fontFamily: 'outfit-thin',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  dateText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontFamily: 'outfit-extrabold',
   },
   logoutButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  dashboardGrid: {
-    paddingTop: 20,
-    paddingBottom: 100,
-  },
-  cardContainer: {
-    marginBottom: 20,
-    borderRadius: 16,
+  tabHeader: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
-  cardGradient: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
+  tabTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 4,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'bold',
-  },
-  cardCount: {
-    color: '#ffffff',
-    fontSize: 28,
-    fontWeight: 'bold',
-    fontFamily: 'extrabold',
-    marginTop: 4,
-  },
-  cardSubtitle: {
-    color: '#ffffff',
+  tabSubtitle: {
     fontSize: 14,
-    opacity: 0.9,
-    fontFamily: 'regular',
+    color: '#64748b',
+    fontWeight: '500',
   },
-  cardOptions: {
-    padding: 20,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
-  },
-  optionText: {
-    marginLeft: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'medium',
+  tabContent: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
   },
   bottomTabContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bottomTabGradient: {
     flexDirection: 'row',
@@ -299,13 +312,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#999',
     marginTop: 4,
-    fontFamily: 'medium',
+    fontFamily: 'outfit-medium',
+
   },
   activeTabText: {
     color: '#667eea',
     fontWeight: '600',
+    fontFamily: 'outfit-bold',
   },
 })
