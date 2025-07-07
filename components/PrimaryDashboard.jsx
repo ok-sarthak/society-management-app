@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, StatusBar } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import Animated, {  
@@ -35,6 +35,10 @@ export default function PrimaryDashboard({ userData, onLogout }) {
       true
     )
   }, [])
+
+  useEffect(() => {
+    welcomeGreeting();
+  }, [new Date().getHours()]);
 
   const welcomeGreeting = () => {
     const hours = new Date().getHours();
@@ -147,14 +151,14 @@ export default function PrimaryDashboard({ userData, onLogout }) {
         </Animated.View>
       </LinearGradient>
 
-      {/* Tab Header */}
+      {/* Tab Header
       <Animated.View 
         entering={FadeInUp.delay(800)}
         style={styles.tabHeader}
       >
         <Text style={styles.tabTitle}>{getTabTitle()}</Text>
         <Text style={styles.tabSubtitle}>{getTabSubtitle()}</Text>
-      </Animated.View>
+      </Animated.View> */}
 
       {/* Tab Content */}
       <View style={styles.tabContent}>

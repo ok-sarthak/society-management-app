@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import Modal from 'react-native-modal';
 import ActiveMembers from '../../../members/ActiveMembers';
-import AddMemberForm from '../../../members/AddMemberForm';
-import EditMembers from '../../../members/EditMembers';
 import InactiveMembers from '../../../members/InactiveMembers';
 import MembersHistory from '../../../members/MembersHistory';
 import ViewMembers from '../../../members/ViewMembers';
@@ -16,28 +14,12 @@ export default function MembersTab({ userData }) {
 
   const memberOptions = [
     {
-      id: 'add',
-      title: 'Add Members',
-      subtitle: 'Add new society members',
-      icon: 'person-add',
-      color: '#007bff',
-      gradient: ['#007bff', '#0056b3']
-    },
-    {
       id: 'view',
       title: 'View Members',
       subtitle: 'See all registered members',
       icon: 'people',
       color: '#28a745',
       gradient: ['#28a745', '#1e7e34']
-    },
-    {
-      id: 'edit',
-      title: 'Edit Members',
-      subtitle: 'Update member information',
-      icon: 'create',
-      color: '#ffc107',
-      gradient: ['#ffc107', '#e0a800']
     },
     {
       id: 'history',
@@ -75,19 +57,8 @@ export default function MembersTab({ userData }) {
 
   const renderModal = () => {
     switch (activeModal) {
-      case 'add':
-        return (
-          <AddMemberForm 
-            onClose={closeModal} 
-            onSuccess={() => {
-              // Could trigger a refresh of member lists here
-            }} 
-          />
-        );
       case 'view':
         return <ViewMembers onClose={closeModal} />;
-      case 'edit':
-        return <EditMembers onClose={closeModal} />;
       case 'history':
         return <MembersHistory onClose={closeModal} />;
       case 'active':
@@ -160,7 +131,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    paddingBottom: 60,
+    paddingBottom: 60, // To avoid content being hidden behind the bottom tab bar
   },
   scrollContainer: {
     flex: 1,
