@@ -44,24 +44,23 @@ export default function VisitorsTab({ userData }) {
   }, []);
 
   useEffect(() => {
-    if (searchQuery.trim()) {
-      performSearch();
-    } else {
+    if (searchQuery.trim() === '') {
       setFilteredVisitors(checkedInVisitors);
+    } else {
+      const q = searchQuery.trim().toLowerCase();
+      setFilteredVisitors(
+        checkedInVisitors.filter(visitor =>
+          (visitor.name && visitor.name.toLowerCase().includes(q)) ||
+          (visitor.phone && visitor.phone.toLowerCase().includes(q)) ||
+          (visitor.flatNumber && visitor.flatNumber.toLowerCase().includes(q)) ||
+          (visitor.tower && visitor.tower.toLowerCase().includes(q)) ||
+          (visitor.purpose && visitor.purpose.toLowerCase().includes(q)) ||
+          (visitor.ownerName && visitor.ownerName.toLowerCase().includes(q))
+        )
+      );
     }
-  }, [searchQuery, checkedInVisitors, performSearch]);
+  }, [searchQuery, checkedInVisitors]);
 
-  const performSearch = React.useCallback(async () => {
-    try {
-      const searchResult = await visitorsService.searchVisitors(searchQuery);
-      if (searchResult.success) {
-        const checkedInOnly = searchResult.data.filter(visitor => visitor.status === 'checked_in');
-        setFilteredVisitors(checkedInOnly);
-      }
-    } catch (_error) {
-      console.error('Error searching visitors:', _error);
-    }
-  }, [searchQuery]);
 
   const loadVisitorData = async () => {
     try {
@@ -216,6 +215,8 @@ export default function VisitorsTab({ userData }) {
 
   const renderHeader = () => (
     <>
+    {searchQuery.trim() === '' && (
+    <>
       {/* Stats Grid */}
       <View style={styles.statsContainer}>
         <View style={styles.statsGrid}>
@@ -252,7 +253,6 @@ export default function VisitorsTab({ userData }) {
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
           <QuickActionButton
             title="Add Visitor"
@@ -276,24 +276,10 @@ export default function VisitorsTab({ userData }) {
           />
         </View>
       </View>
+      </>
+      )}
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#6c757d" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search visitors by name, phone, flat..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color="#6c757d" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+
 
       {/* List Header */}
       <View style={styles.listHeaderContainer}>
@@ -332,6 +318,27 @@ export default function VisitorsTab({ userData }) {
 
   return (
     <View style={styles.container}>
+      {/* Search Bar moved OUTSIDE FlatList */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#6c757d" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search check-in visitors by name, phone, flat..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+            clearButtonMode="while-editing"
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#6c757d" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
       <FlatList
         data={filteredVisitors}
         keyExtractor={(item) => item.id}
@@ -368,10 +375,14 @@ export default function VisitorsTab({ userData }) {
       />
 
       <VisitorsHistoryModal
-        visible={visitorsHistoryModalVisible}
-        onClose={() => setVisitorsHistoryModalVisible(false)}
-        userData={userData}
-      />
+              visible={visitorsHistoryModalVisible}
+              onClose={() => setVisitorsHistoryModalVisible(false)}
+              userData={userData}
+              onCheckOut={(visitor) => {
+                console.log('VisitorsTab handleCheckOut called from VisitorsHistoryModal:', visitor);
+                handleCheckOut(visitor);
+              }} // Pass handleCheckOut to history modal
+            />
 
       <VisitorLogsModal
         visible={visitorLogsModalVisible}

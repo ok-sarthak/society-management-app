@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
-    Alert,
-    Linking,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Linking,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function VisitorDetailsModal({ visible, onClose, visitor, onCheckOut }) {
@@ -245,7 +245,15 @@ export default function VisitorDetailsModal({ visible, onClose, visitor, onCheck
           <View style={styles.footer}>
             <TouchableOpacity
               style={styles.checkoutButton}
-              onPress={() => onCheckOut(visitor)}
+              onPress={() => {
+                console.log('Check out button pressed for visitor:', visitor.name);
+                if (onCheckOut) {
+                  onCheckOut(visitor);
+                } else {
+                  console.error('onCheckOut function not provided');
+                  Alert.alert('Error', 'Check out function not available');
+                }
+              }}
             >
               <Ionicons name="log-out" size={20} color="#fff" />
               <Text style={styles.checkoutButtonText}>Check Out Visitor</Text>

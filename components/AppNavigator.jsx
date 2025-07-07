@@ -98,7 +98,7 @@ export default function AppNavigator() {
   }
 
   // Clear AsyncStorage for testing purposes
-  AsyncStorage.clear() 
+  // AsyncStorage.clear() 
 
 
   return renderScreen()

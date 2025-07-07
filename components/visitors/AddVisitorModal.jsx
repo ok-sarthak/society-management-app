@@ -202,42 +202,42 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
   );
 
   const FlatSelectorModal = () => (
-    <Modal
-      visible={showFlatSelector}
-      animationType="slide"
-      presentationStyle="pageSheet"
-    >
-      <View style={styles.selectorContainer}>
-        <View style={styles.selectorHeader}>
-          <Text style={styles.selectorTitle}>Select Flat</Text>
-          <TouchableOpacity onPress={() => setShowFlatSelector(false)}>
-            <Ionicons name="close" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-        
-        <FlatList
-          data={flats}
-          keyExtractor={(item) => `${item.tower}-${item.flatNumber}`}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.flatSelectorItem}
-              onPress={() => handleFlatSelect(item)}
-            >
-              <View style={styles.flatInfo}>
-                <Text style={styles.flatNumber}>{item.flatNumber}</Text>
-                <Text style={styles.flatOwner}>{item.ownerName}</Text>
-                <Text style={styles.flatPhone}>{item.phone}</Text>
-              </View>
-              <View style={[
-                styles.statusIndicator,
-                { backgroundColor: item.status === 'active' ? '#28a745' : '#dc3545' }
-              ]} />
-            </TouchableOpacity>
-          )}
-        />
+  <Modal
+    visible={showFlatSelector}
+    animationType="slide"
+    presentationStyle="pageSheet"
+  >
+    <View style={styles.selectorContainer}>
+      <View style={styles.selectorHeader}>
+        <Text style={styles.selectorTitle}>Select Flat</Text>
+        <TouchableOpacity onPress={() => setShowFlatSelector(false)}>
+          <Ionicons name="close" size={24} color="#666" />
+        </TouchableOpacity>
       </View>
-    </Modal>
-  );
+      
+      <FlatList
+        data={flats}
+        keyExtractor={(item, index) => `${item.tower}-${item.flatNumber}-${index}`} // Ensure unique keys
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.flatSelectorItem}
+            onPress={() => handleFlatSelect(item)}
+          >
+            <View style={styles.flatInfo}>
+              <Text style={styles.flatNumber}>{item.flatNumber}</Text>
+              <Text style={styles.flatOwner}>{item.ownerName}</Text>
+              <Text style={styles.flatPhone}>{item.phone}</Text>
+            </View>
+            <View style={[
+              styles.statusIndicator,
+              { backgroundColor: item.status === 'active' ? '#28a745' : '#dc3545' }
+            ]} />
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  </Modal>
+);
 
   return (
     <Modal
