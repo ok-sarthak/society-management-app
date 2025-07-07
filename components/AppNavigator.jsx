@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react'
-import { View } from 'react-native'
-import SplashScreen from './SplashScreen'
-import OnboardingScreen from './OnboardingScreen'
-import AuthScreen from './AuthScreen'
-import PrimaryDashboard from './PrimaryDashboard'
-import SecondaryDashboard from './SecondaryDashboard'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { signOut } from 'firebase/auth'
+import React, { useEffect, useState } from 'react'
+import { View } from 'react-native'
 import { auth } from '../config/firebase'
+import AuthScreen from './AuthScreen'
+import OnboardingScreen from './OnboardingScreen'
+import PrimaryDashboard from './PrimaryDashboard'
+import SecondaryDashboard from './SecondaryDashboard'
+import SplashScreen from './SplashScreen'
 
 export default function AppNavigator() {
   const [currentScreen, setCurrentScreen] = useState('splash')
@@ -79,6 +79,13 @@ export default function AppNavigator() {
   }
 
   const renderScreen = () => {
+    if (currentScreen === 'main') {
+    // If userData is missing or user is not logged in, force logout and redirect to auth
+    if (!userData) {
+      handleLogout()
+      return <AuthScreen onLogin={handleLogin} />
+    }
+  }
     switch (currentScreen) {
       case 'splash':
         return <SplashScreen onFinish={handleSplashFinish} />
