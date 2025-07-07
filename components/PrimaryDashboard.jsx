@@ -142,6 +142,7 @@ export default function PrimaryDashboard({ userData, onLogout }) {
                 })}
               </Text>
             </Animated.View>
+            
           </View>
           <Animated.View entering={ZoomIn.delay(600)} style={pulseStyle}>
             <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
