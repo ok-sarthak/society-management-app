@@ -14,11 +14,11 @@ import Animated, {
 } from 'react-native-reanimated'
 
 // Import tab components
-import DashboardTab from './tabs/DashboardTab'
-import MembersTab from './tabs/MembersTab'
-import MaintenanceTab from './tabs/MaintenanceTab'
-import VisitorsTab from './tabs/VisitorsTab'
-import StaffTab from './tabs/StaffTab'
+import DashboardTab from './tabs/primary/DashboardTab/DashboardTab'
+import MembersTab from './tabs/primary/MembersTab/MembersTab'
+import MaintenanceTab from './tabs/primary/MaintenanceTab/MaintenanceTab'
+import VisitorsTab from './tabs/primary/VisitorsTab/VisitorsTab'
+import StaffTab from './tabs/primary/StaffTab/StaffTab'
 
 const { width, height } = Dimensions.get('window')
 
