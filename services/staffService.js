@@ -121,6 +121,9 @@ export const staffService = {
       const currentDoc = await getDoc(staffRef);
       const currentData = currentDoc.data();
       
+      // Ensure updatedBy is always provided
+      const safeUpdatedBy = updatedBy || 'System';
+      
       // Find only the fields that actually changed
       const changedFields = {};
       const oldChangedFields = {};
@@ -137,14 +140,18 @@ export const staffService = {
           
           if (oldStr !== newStr) {
             changedFields[key] = newValue;
-            oldChangedFields[key] = oldValue;
+            // Only include old value if it's not undefined
+            if (oldValue !== undefined) {
+              oldChangedFields[key] = oldValue;
+            }
           }
         }
       });
       
       await updateDoc(staffRef, {
         ...updateData,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        updatedBy: safeUpdatedBy
       });
 
       // Only log if there are actual changes
@@ -152,7 +159,7 @@ export const staffService = {
         await this.logStaffActivity(staffId, 'STAFF_UPDATED', {
           oldData: oldChangedFields,
           newData: changedFields
-        }, updatedBy, updateData.name || currentData.name);
+        }, safeUpdatedBy, updateData.name || currentData.name);
       }
       
       return { success: true };
@@ -407,11 +414,34 @@ export const staffService = {
   // Log staff activity
   async logStaffActivity(staffId, activityType, changes, performedBy, staffName = null) {
     try {
+      // Clean up changes object to remove undefined values
+      const cleanChanges = {};
+      if (changes) {
+        Object.keys(changes).forEach(key => {
+          if (changes[key] !== undefined) {
+            if (typeof changes[key] === 'object' && changes[key] !== null) {
+              // Clean nested objects
+              const cleanedObj = {};
+              Object.keys(changes[key]).forEach(nestedKey => {
+                if (changes[key][nestedKey] !== undefined) {
+                  cleanedObj[nestedKey] = changes[key][nestedKey];
+                }
+              });
+              if (Object.keys(cleanedObj).length > 0) {
+                cleanChanges[key] = cleanedObj;
+              }
+            } else {
+              cleanChanges[key] = changes[key];
+            }
+          }
+        });
+      }
+
       await addDoc(collection(db, 'staff_history'), {
         staffId,
         activityType,
-        changes,
-        staffName,
+        changes: cleanChanges,
+        staffName: staffName || 'Unknown',
         performedBy: performedBy || 'System',
         createdAt: serverTimestamp(),
         timestamp: serverTimestamp()
