@@ -1,285 +1,232 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Linking from 'expo-linking';
+import React, { useState } from 'react';
 import {
-  Animated,
-  Dimensions,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  LinearGradient
+  View
 } from 'react-native';
-import { membersService } from '../../../../services/membersService';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+export default function DashboardTab({ userData, onTabChange }) {
+  const [contactModalVisible, setContactModalVisible] = useState(false);
 
-export default function DashboardTab({ userData }) {
-  const [memberStats, setMemberStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  // Animation refs
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(100)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  
-  // Individual card animations
-  const card1Anim = useRef(new Animated.Value(0)).current;
-  const card2Anim = useRef(new Animated.Value(0)).current;
-  const card3Anim = useRef(new Animated.Value(0)).current;
-  const card4Anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    loadMemberStats();
-    startAnimations();
-    startPulseAnimation();
-  }, []);
-
-  const loadMemberStats = async () => {
-    try {
-      setLoading(true);
-      const [allMembersResult, activeMembersResult, inactiveMembersResult] = await Promise.all([
-        membersService.getAllMembers(),
-        membersService.getActiveMembers(),
-        membersService.getInactiveMembers()
-      ]);
-
-      if (allMembersResult.success && activeMembersResult.success && inactiveMembersResult.success) {
-        setMemberStats({
-          total: allMembersResult.data.length,
-          active: activeMembersResult.data.length,
-          inactive: inactiveMembersResult.data.length
-        });
-      }
-    } catch (error) {
-      console.error('Error loading member stats:', error);
-    } finally {
-      setLoading(false);
+  const handleNavigation = (tabIndex) => {
+    if (onTabChange) {
+      onTabChange(tabIndex);
     }
   };
 
-  const startAnimations = () => {
-    // Main entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      })
-    ]).start();
-
-    // Staggered card animations
-    Animated.sequence([
-      Animated.timing(card1Anim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card2Anim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card3Anim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(card4Anim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      })
-    ]).start();
-
-    // Rotation animation
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 10000,
-        useNativeDriver: true,
-      })
-    ).start();
-  };
-
-  const startPulseAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        })
-      ])
-    ).start();
-  };
-
-  const PremiumStatCard = ({ title, value, icon, gradient, cardAnim, percentage }) => {
-    const cardOpacity = cardAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1],
-    });
-
-    const cardTranslate = cardAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [50, 0],
-    });
-
-    return (
-      <Animated.View
-        style={[
-          styles.premiumStatCard,
-          {
-            opacity: cardOpacity,
-            transform: [{ translateY: cardTranslate }],
-          }
-        ]}
-      >
-        <View style={[styles.gradientBackground, { backgroundColor: gradient[0] }]}>
-          <View style={styles.cardGlow} />
-          
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: gradient[1] }]}>
-              <Ionicons name={icon} size={20} color="#fff" />
-            </View>
-            <View style={styles.percentageContainer}>
-              <Text style={styles.percentageText}>{percentage}%</Text>
-            </View>
-          </View>
-
-          <View style={styles.cardContent}>
-            <Text style={styles.cardValue}>{loading ? '••' : value}</Text>
-            <Text style={styles.cardTitle}>{title}</Text>
-          </View>
-
-          <View style={styles.cardPattern}>
-            <View style={styles.patternDot} />
-            <View style={styles.patternDot} />
-            <View style={styles.patternDot} />
-          </View>
-        </View>
-      </Animated.View>
+  const handleExternalLink = (url, linkName) => {
+    Alert.alert(
+      "Leaving App",
+      `You are about to open ${linkName} in your browser. This will take you outside the app.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Continue",
+          onPress: () => Linking.openURL(url)
+        }
+      ]
     );
   };
 
-  const FloatingActionButton = ({ icon, color, onPress, delay = 0 }) => {
-    const fabAnim = useRef(new Animated.Value(0)).current;
+  const handleContact = (type) => {
+    setContactModalVisible(false);
+    
+    if (type === 'email') {
+      Linking.openURL('mailto:support@vacantvectors.tech?subject=Society Management App Support');
+    } else if (type === 'phone') {
+      Linking.openURL('tel:+919876543210');
+    } else if (type === 'whatsapp') {
+      Linking.openURL('whatsapp://send?phone=919876543210&text=Hello, I need help with Society Management App');
+    }
+  };
 
-    useEffect(() => {
-      setTimeout(() => {
-        Animated.spring(fabAnim, {
-          toValue: 1,
-          tension: 100,
-          friction: 8,
-          useNativeDriver: true,
-        }).start();
-      }, delay);
-    }, []);
-
-    const fabScale = fabAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1],
-    });
-
+  const SimpleCard = ({ title, subtitle, icon, gradient, onPress }) => {
     return (
-      <Animated.View style={[styles.fab, { transform: [{ scale: fabScale }] }]}>
+      <View style={styles.liquidCard}>
         <TouchableOpacity
-          style={[styles.fabButton, { backgroundColor: color }]}
+          style={styles.cardTouchable}
           onPress={onPress}
-          activeOpacity={0.8}
+          activeOpacity={0.7}
         >
-          <Ionicons name={icon} size={24} color="#fff" />
+          <LinearGradient
+            colors={gradient}
+            style={styles.cardGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            {/* Content */}
+            <View style={styles.cardContent}>
+              <View style={styles.iconContainer}>
+                <Ionicons name={icon} size={24} color="#ffffff" />
+              </View>
+              
+              <View style={styles.cardTextContainer}>
+                <Text style={styles.cardTitle}>{title}</Text>
+                <Text style={styles.cardSubtitle}>{subtitle}</Text>
+              </View>
+              
+              <View style={styles.cardArrow}>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+              </View>
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
-  const PremiumWelcomeCard = () => {
-    const spin = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '360deg'],
-    });
-
+  const ContactModal = () => {
+    if (!contactModalVisible) return null;
+    
     return (
-      <Animated.View
-        style={[
-          styles.premiumWelcomeCard,
-          {
-            opacity: fadeAnim,
-            transform: [
-              { translateY: slideAnim },
-              { scale: scaleAnim }
-            ],
-          }
-        ]}
-      >
-        <View style={styles.welcomeGradient}>
-          <View style={styles.welcomeContent}>
-            <View style={styles.welcomeTextContainer}>
-              <Text style={styles.welcomeGreeting}>Good Morning</Text>
-              <Text style={styles.welcomeName}>{userData?.name || 'Administrator'}</Text>
-              <Text style={styles.welcomeSubtitle}>Ready to manage your society?</Text>
+      <View style={styles.modalOverlayContainer}>
+        <LinearGradient
+          colors={['rgba(0,0,0,0.3)', 'rgba(102,126,234,0.2)', 'rgba(118,75,162,0.25)', 'rgba(0,0,0,0.4)']}
+          style={styles.modalOverlay}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <TouchableOpacity 
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setContactModalVisible(false)}
+          />
+          <View style={styles.modalContent}>
+            <LinearGradient
+              colors={['rgba(102,126,234,0.95)', 'rgba(118,75,162,0.95)', 'rgba(240,147,251,0.90)']}
+              style={styles.modalGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+            <View style={styles.modalHeader}>
+              <Ionicons name="headset" size={48} color="#ffffff" />
+              <Text style={styles.modalTitle}>Contact Support</Text>
+              <Text style={styles.modalSubtitle}>Our team is here to help you 24/7</Text>
             </View>
             
-            <View style={styles.welcomeIconContainer}>
-              <Animated.View
-                style={[
-                  styles.rotatingBackground,
-                  { transform: [{ rotate: spin }] }
-                ]}
-              />
-              <Animated.View
-                style={[
-                  styles.pulsingIcon,
-                  { transform: [{ scale: pulseAnim }] }
-                ]}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonContainer}
+                onPress={() => handleContact('email')}
               >
-                <Ionicons name="business" size={32} color="#fff" />
-              </Animated.View>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
+                  style={styles.modalButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={[styles.modalButtonIcon, { backgroundColor: '#4285F4' }]}>
+                    <Ionicons name="mail" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.modalButtonContent}>
+                    <Text style={styles.modalButtonText}>Send Email</Text>
+                    <Text style={styles.modalButtonSubtext}>support@vacantvectors.tech</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#667eea" />
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalButtonContainer}
+                onPress={() => handleContact('phone')}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
+                  style={styles.modalButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={[styles.modalButtonIcon, { backgroundColor: '#34C759' }]}>
+                    <Ionicons name="call" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.modalButtonContent}>
+                    <Text style={styles.modalButtonText}>Call Support</Text>
+                    <Text style={styles.modalButtonSubtext}>+91 98765 43210</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#667eea" />
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalButtonContainer}
+                onPress={() => handleContact('whatsapp')}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.85)']}
+                  style={styles.modalButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={[styles.modalButtonIcon, { backgroundColor: '#25D366' }]}>
+                    <Ionicons name="logo-whatsapp" size={20} color="#ffffff" />
+                  </View>
+                  <View style={styles.modalButtonContent}>
+                    <Text style={styles.modalButtonText}>WhatsApp</Text>
+                    <Text style={styles.modalButtonSubtext}>Quick response</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#667eea" />
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
+            
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setContactModalVisible(false)}
+            >
+              <LinearGradient
+                colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+                style={styles.modalCloseGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.modalCloseText}>Cancel</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            </LinearGradient>
           </View>
-          
-          <View style={styles.weatherInfo}>
-            <View style={styles.weatherItem}>
-              <Ionicons name="sunny" size={16} color="#FFA726" />
-              <Text style={styles.weatherText}>28°C</Text>
-            </View>
-            <View style={styles.weatherDivider} />
-            <View style={styles.weatherItem}>
-              <Ionicons name="time" size={16} color="#42A5F5" />
-              <Text style={styles.weatherText}>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</Text>
-            </View>
-          </View>
-        </View>
-      </Animated.View>
+        </LinearGradient>
+      </View>
     );
   };
 
-  const calculatePercentage = (value, total) => {
-    return total > 0 ? Math.round((value / total) * 100) : 0;
+  const WelcomeHeader = () => {
+    const getGreeting = () => {
+      const hours = new Date().getHours();
+      if (hours >= 5 && hours < 12) return 'Good Morning';
+      if (hours >= 12 && hours < 18) return 'Good Afternoon';
+      return 'Good Evening';
+    };
+
+    return (
+      <View style={styles.welcomeHeader}>
+        <LinearGradient
+          colors={['#667eea', '#764ba2', '#f093fb']}
+          style={styles.welcomeGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.welcomeContent}>
+            <View style={styles.welcomeText}>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.userName}>{userData?.name || 'Administrator'}</Text>
+              <Text style={styles.welcomeSubtext}>Manage your society efficiently</Text>
+            </View>
+            <View style={styles.welcomeIcon}>
+              <Ionicons name="business" size={32} color="#ffffff" />
+            </View>
+          </View>
+        </LinearGradient>
+      </View>
+    );
   };
 
   return (
@@ -289,158 +236,125 @@ export default function DashboardTab({ userData }) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Premium Header */}
-        <View style={styles.premiumHeader}>
-          <View style={styles.headerBackground} />
-          <PremiumWelcomeCard />
-        </View>
+        {/* Welcome Header */}
+        <WelcomeHeader />
 
-        {/* Stats Grid */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Analytics Overview</Text>
+        {/* Navigation Cards */}
+        <View style={styles.navigationContainer}>
+          <Text style={styles.sectionTitle}>Quick Navigation</Text>
           
-          <View style={styles.statsGrid}>
-            <PremiumStatCard
-              title="Total Members"
-              value={memberStats.total}
+          <View style={styles.cardsGrid}>
+            <SimpleCard
+              title="Members"
+              subtitle="Manage residents"
               icon="people"
               gradient={['#667eea', '#764ba2']}
-              cardAnim={card1Anim}
-              percentage={100}
+              onPress={() => handleNavigation(1)}
             />
             
-            <PremiumStatCard
-              title="Active Members"
-              value={memberStats.active}
-              icon="checkmark-circle"
+            <SimpleCard
+              title="Maintenance"
+              subtitle="Track payments"
+              icon="card"
               gradient={['#11998e', '#38ef7d']}
-              cardAnim={card2Anim}
-              percentage={calculatePercentage(memberStats.active, memberStats.total)}
+              onPress={() => handleNavigation(2)}
             />
             
-            <PremiumStatCard
-              title="Inactive Members"
-              value={memberStats.inactive}
-              icon="pause-circle"
+            <SimpleCard
+              title="Visitors"
+              subtitle="Guest management"
+              icon="car-sport"
               gradient={['#ff416c', '#ff4b2b']}
-              cardAnim={card3Anim}
-              percentage={calculatePercentage(memberStats.inactive, memberStats.total)}
+              onPress={() => handleNavigation(3)}
             />
             
-            <PremiumStatCard
-              title="Occupancy Rate"
-              value={`${calculatePercentage(memberStats.active, memberStats.total)}%`}
-              icon="home"
+            <SimpleCard
+              title="Staff"
+              subtitle="Employee records"
+              icon="people-circle"
               gradient={['#ff9a9e', '#fecfef']}
-              cardAnim={card4Anim}
-              percentage={calculatePercentage(memberStats.active, memberStats.total)}
+              onPress={() => handleNavigation(4)}
             />
           </View>
         </View>
 
-        {/* Activity Timeline */}
-        <Animated.View
-          style={[
-            styles.timelineContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }
-          ]}
-        >
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+        {/* Contact Support Card */}
+        <View style={styles.supportContainer}>
+          <Text style={styles.sectionTitle}>Need Help?</Text>
           
-          <View style={styles.timelineCard}>
-            <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: '#11998e' }]} />
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>New Member Added</Text>
-                <Text style={styles.timelineSubtitle}>John Doe joined Tower A-101</Text>
-                <Text style={styles.timelineTime}>2 hours ago</Text>
-              </View>
-            </View>
-            
-            <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: '#667eea' }]} />
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>Member Updated</Text>
-                <Text style={styles.timelineSubtitle}>Profile information changed</Text>
-                <Text style={styles.timelineTime}>5 hours ago</Text>
-              </View>
-            </View>
-            
-            <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, { backgroundColor: '#ff416c' }]} />
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTitle}>System Backup</Text>
-                <Text style={styles.timelineSubtitle}>Daily backup completed</Text>
-                <Text style={styles.timelineTime}>1 day ago</Text>
-              </View>
-            </View>
-          </View>
-        </Animated.View>
+          <SimpleCard
+            title="Contact Support"
+            subtitle="Get help from our team"
+            icon="headset"
+            gradient={['#667eea', '#764ba2']}
+            onPress={() => setContactModalVisible(true)}
+          />
+        </View>
 
-        {/* Quick Access */}
-        <Animated.View
-          style={[
-            styles.quickAccessContainer,
-            {
-              opacity: fadeAnim,
-            }
-          ]}
-        >
-          <Text style={styles.sectionTitle}>Quick Access</Text>
-          
-          <View style={styles.quickAccessGrid}>
-            <TouchableOpacity style={[styles.quickAccessCard, { borderColor: '#667eea' }]}>
-              <View style={[styles.quickAccessIcon, { backgroundColor: '#667eea' }]}>
-                <Ionicons name="person-add" size={24} color="#fff" />
+        {/* Footer Section */}
+        <View style={styles.footerContainer}>
+          <View style={styles.footerCard}>
+            <LinearGradient
+              colors={['#ffffff', '#f8fafc']}
+              style={styles.footerGradient}
+            >
+              {/* Made in India Section */}
+              <View style={styles.madeInIndiaSection}>
+                <View style={styles.flagContainer}>
+                  <Text style={styles.flagEmoji}>🇮🇳</Text>
+                </View>
+                <Text style={styles.madeInIndiaText}>Made in India</Text>
               </View>
-              <Text style={styles.quickAccessText}>Add Member</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickAccessCard, { borderColor: '#11998e' }]}>
-              <View style={[styles.quickAccessIcon, { backgroundColor: '#11998e' }]}>
-                <Ionicons name="analytics" size={24} color="#fff" />
+
+              {/* Developer Section */}
+              <TouchableOpacity 
+                style={styles.developerSection}
+                onPress={() => handleExternalLink('https://vacantvectors.tech', 'Vacant Vectors')}
+              >
+                <Ionicons name="code-slash" size={20} color="#667eea" />
+                <Text style={styles.developerText}>Developed by Vacant Vectors</Text>
+              </TouchableOpacity>
+
+              {/* Links Section */}
+              <View style={styles.linksSection}>
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={() => handleExternalLink('https://vacantvectors.tech/terms', 'Terms & Conditions')}
+                >
+                  <Text style={styles.linkText}>Terms & Conditions</Text>
+                </TouchableOpacity>
+                
+                <View style={styles.linkDivider} />
+                
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={() => handleExternalLink('https://vacantvectors.tech/privacy', 'Privacy Policy')}
+                >
+                  <Text style={styles.linkText}>Privacy Policy</Text>
+                </TouchableOpacity>
+                
+                <View style={styles.linkDivider} />
+                
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={() => handleExternalLink('https://vacantvectors.tech/cookies', 'Cookie Policy')}
+                >
+                  <Text style={styles.linkText}>Cookies</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.quickAccessText}>Analytics</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickAccessCard, { borderColor: '#ff416c' }]}>
-              <View style={[styles.quickAccessIcon, { backgroundColor: '#ff416c' }]}>
-                <Ionicons name="settings" size={24} color="#fff" />
+
+              {/* Version Info */}
+              <View style={styles.versionSection}>
+                <Text style={styles.versionText}>Version 1.0.0</Text>
+                <Text style={styles.copyrightText}>© 2025 Vacant Vectors</Text>
               </View>
-              <Text style={styles.quickAccessText}>Settings</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickAccessCard, { borderColor: '#ff9a9e' }]}>
-              <View style={[styles.quickAccessIcon, { backgroundColor: '#ff9a9e' }]}>
-                <Ionicons name="notifications" size={24} color="#fff" />
-              </View>
-              <Text style={styles.quickAccessText}>Notifications</Text>
-            </TouchableOpacity>
+            </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
       </ScrollView>
 
-      {/* Floating Action Buttons */}
-      <View style={styles.fabContainer}>
-        <FloatingActionButton
-          icon="add"
-          color="#667eea"
-          delay={1000}
-        />
-        <FloatingActionButton
-          icon="search"
-          color="#11998e"
-          delay={1200}
-        />
-        <FloatingActionButton
-          icon="notifications"
-          color="#ff416c"
-          delay={1400}
-        />
-      </View>
+      {/* Contact Modal */}
+      <ContactModal />
     </View>
   );
 }
@@ -448,32 +362,19 @@ export default function DashboardTab({ userData }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafe',
+    backgroundColor: '#f8fafc',
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 40,
   },
-  premiumHeader: {
-    height: 240,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  headerBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: '#667eea',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  premiumWelcomeCard: {
+
+  // Welcome Header Styles
+  welcomeHeader: {
     margin: 20,
-    marginTop: 60,
+    marginTop: 10,
     borderRadius: 24,
     overflow: 'hidden',
     elevation: 8,
@@ -483,261 +384,320 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
   },
   welcomeGradient: {
-    backgroundColor: '#fff',
     padding: 24,
   },
   welcomeContent: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
   },
-  welcomeTextContainer: {
+  welcomeText: {
     flex: 1,
   },
-  welcomeGreeting: {
+  greeting: {
     fontSize: 14,
-    color: '#8f9bb3',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '500',
     marginBottom: 4,
   },
-  welcomeName: {
+  userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2e3a59',
+    color: '#ffffff',
     marginBottom: 4,
   },
-  welcomeSubtitle: {
+  welcomeSubtext: {
     fontSize: 14,
-    color: '#8f9bb3',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '400',
   },
-  welcomeIconContainer: {
-    position: 'relative',
-    width: 64,
-    height: 64,
-  },
-  rotatingBackground: {
-    position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#667eea',
-    opacity: 0.1,
-  },
-  pulsingIcon: {
-    position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#667eea',
+  welcomeIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 16,
   },
-  weatherInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eef1f7',
-  },
-  weatherItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  weatherText: {
-    fontSize: 14,
-    color: '#8f9bb3',
-    marginLeft: 6,
-  },
-  weatherDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: '#eef1f7',
-    marginHorizontal: 16,
-  },
-  statsContainer: {
+
+  // Navigation Container
+  navigationContainer: {
     padding: 20,
+    paddingTop: 0,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#2e3a59',
+    color: '#2d3748',
     marginBottom: 16,
+    fontFamily: 'outfit-bold',
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  cardsGrid: {
+    gap: 12,
   },
-  premiumStatCard: {
-    width: (screenWidth - 60) / 2,
-    marginBottom: 16,
+
+  // Card Styles
+  liquidCard: {
     borderRadius: 20,
     overflow: 'hidden',
+    marginBottom: 16,
     elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 12,
+    backgroundColor: '#ffffff',
   },
-  gradientBackground: {
+  cardTouchable: {
+    width: '100%',
+  },
+  cardGradient: {
     padding: 20,
-    position: 'relative',
-    minHeight: 140,
-  },
-  cardGlow: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  percentageContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  percentageText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
   },
   cardContent: {
-    marginBottom: 16,
-  },
-  cardValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  cardPattern: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
     flexDirection: 'row',
+    alignItems: 'center',
+    height: '100%',
   },
-  patternDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginLeft: 4,
-  },
-  timelineContainer: {
-    padding: 20,
-  },
-  timelineCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
-    marginTop: 4,
   },
-  timelineContent: {
+  cardTextContainer: {
     flex: 1,
   },
-  timelineTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2e3a59',
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
     marginBottom: 4,
+    fontFamily: 'outfit-bold',
   },
-  timelineSubtitle: {
+  cardSubtitle: {
     fontSize: 14,
-    color: '#8f9bb3',
-    marginBottom: 4,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontFamily: 'outfit-medium',
   },
-  timelineTime: {
-    fontSize: 12,
-    color: '#c5cee0',
+  cardArrow: {
+    marginLeft: 12,
   },
-  quickAccessContainer: {
+
+  // Support Container
+  supportContainer: {
     padding: 20,
+    paddingTop: 0,
   },
-  quickAccessGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  quickAccessCard: {
-    backgroundColor: '#fff',
-    width: (screenWidth - 60) / 2,
+
+  // Footer Styles
+  footerContainer: {
     padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    elevation: 3,
+    paddingTop: 0,
+  },
+  footerCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
   },
-  quickAccessIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+  footerGradient: {
+    padding: 24,
   },
-  quickAccessText: {
+  madeInIndiaSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  flagContainer: {
+    marginRight: 8,
+  },
+  flagEmoji: {
+    fontSize: 24,
+  },
+  madeInIndiaText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2d3748',
+    fontFamily: 'outfit-bold',
+  },
+  developerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  developerText: {
+    fontSize: 16,
+    color: '#4a5568',
+    marginLeft: 8,
+    fontFamily: 'outfit-medium',
+  },
+  linksSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  linkButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  linkText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#2e3a59',
+    color: '#667eea',
+    fontWeight: '500',
+    fontFamily: 'outfit-medium',
   },
-  fabContainer: {
+  linkDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 8,
+  },
+  versionSection: {
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 16,
+  },
+  versionText: {
+    fontSize: 12,
+    color: '#718096',
+    marginBottom: 4,
+    fontFamily: 'outfit-regular',
+  },
+  copyrightText: {
+    fontSize: 12,
+    color: '#a0aec0',
+    fontFamily: 'outfit-regular',
+  },
+
+  // Enhanced Modal Styles
+  modalOverlayContainer: {
     position: 'absolute',
-    right: 20,
-    bottom: 30,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
   },
-  fab: {
-    marginBottom: 12,
-  },
-  fabButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  modalOverlay: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    padding: 20,
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    overflow: 'hidden',
+    elevation: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 1001,
+  },
+  modalGradient: {
+    padding: 24,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginTop: 12,
+    marginBottom: 8,
+    fontFamily: 'outfit-bold',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    fontFamily: 'outfit-medium',
+  },
+  modalButtons: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 20,
+  },
+  modalButtonContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  modalButtonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  modalButtonContent: {
+    flex: 1,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2d3748',
+    marginBottom: 2,
+    fontFamily: 'outfit-semibold',
+  },
+  modalButtonSubtext: {
+    fontSize: 12,
+    color: '#718096',
+    fontFamily: 'outfit-regular',
+  },
+  modalCloseButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  modalCloseGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontFamily: 'outfit-medium',
+    fontWeight: '600',
   },
 });
