@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+    paddingBottom: 80, // Adjusted to prevent overlap with footer
   },
   scrollContainer: {
     flex: 1,

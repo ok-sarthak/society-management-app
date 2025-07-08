@@ -491,6 +491,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafe',
+    paddingBottom: 80,
   },
   flatList: {
     flex: 1,

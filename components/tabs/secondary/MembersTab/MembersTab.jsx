@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    paddingBottom: 60, // To avoid content being hidden behind the bottom tab bar
+    paddingBottom: 80, // To avoid content being hidden behind the bottom tab bar
   },
   scrollContainer: {
     flex: 1,
