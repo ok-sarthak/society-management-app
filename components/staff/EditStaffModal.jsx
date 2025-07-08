@@ -31,6 +31,8 @@ export default function EditStaffModal({
     staffType: '',
     salary: '',
     notes: '',
+    proofOfIdentityType: '',
+    proofOfIdentityNumber: '',
     assignedFlats: []
   });
   const [isActive, setIsActive] = useState(true);
@@ -65,6 +67,8 @@ export default function EditStaffModal({
         staffType: staff.staffType || '',
         salary: staff.salary ? staff.salary.toString() : '',
         notes: staff.notes || '',
+        proofOfIdentityType: staff.proofOfIdentityType || '',
+        proofOfIdentityNumber: staff.proofOfIdentityNumber || '',
         assignedFlats: staff.assignedFlats || []
       });
       setIsActive(staff.isActive !== false);
@@ -345,6 +349,29 @@ export default function EditStaffModal({
               </Text>
               <Ionicons name="chevron-forward" size={20} color="#666" />
             </TouchableOpacity>
+          </View>
+
+          {/* Proof of Identity */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Proof of Identity</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Type</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.proofOfIdentityType}
+                onChangeText={(value) => handleInputChange('proofOfIdentityType', value)}
+                placeholder="Enter proof of identity type (e.g., Aadhar, Passport)"
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Number</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.proofOfIdentityNumber}
+                onChangeText={(value) => handleInputChange('proofOfIdentityNumber', value)}
+                placeholder="Enter proof of identity number"
+              />
+            </View>
           </View>
 
           {/* Assigned Flats */}

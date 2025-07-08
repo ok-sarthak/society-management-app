@@ -25,6 +25,8 @@ export default function AddStaffModal({ visible, onClose, onSuccess, userData })
     staffType: '',
     salary: '',
     notes: '',
+    proofOfIdentityType: '',
+    proofOfIdentityNumber: '',
     assignedFlats: []
   });
   const [members, setMembers] = useState([]);
@@ -97,6 +99,8 @@ export default function AddStaffModal({ visible, onClose, onSuccess, userData })
       staffType: '',
       salary: '',
       notes: '',
+      proofOfIdentityType: '',
+      proofOfIdentityNumber: '',
       assignedFlats: []
     });
     setMemberSearchQuery('');
@@ -324,6 +328,29 @@ export default function AddStaffModal({ visible, onClose, onSuccess, userData })
                 placeholder="Enter any additional notes"
                 multiline
                 numberOfLines={3}
+              />
+            </View>
+          </View>
+
+          {/* Proof of Identity */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Proof of Identity</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Type</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.proofOfIdentityType}
+                onChangeText={(value) => handleInputChange('proofOfIdentityType', value)}
+                placeholder="Enter proof of identity type (e.g., Aadhar, Passport)"
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Number</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.proofOfIdentityNumber}
+                onChangeText={(value) => handleInputChange('proofOfIdentityNumber', value)}
+                placeholder="Enter proof of identity number"
               />
             </View>
           </View>

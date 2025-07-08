@@ -175,6 +175,29 @@ export default function StaffDetailsModal({ visible, onClose, staff, onEdit }) {
             </View>
           )}
 
+          {/* Proof of Identity */}
+          {staff.proofOfIdentityType && staff.proofOfIdentityNumber && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Proof of Identity</Text>
+              <View style={styles.infoCard}>
+                <View style={styles.infoRow}>
+                  <Ionicons name="id-card" size={20} color="#17a2b8" />
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoLabel}>Type</Text>
+                    <Text style={styles.infoValue}>{staff.proofOfIdentityType}</Text>
+                  </View>
+                </View>
+                <View style={styles.infoRow}>
+                  <Ionicons name="id-card-outline" size={20} color="#17a2b8" />
+                  <View style={styles.infoContent}>
+                    <Text style={styles.infoLabel}>Number</Text>
+                    <Text style={styles.infoValue}>{staff.proofOfIdentityNumber}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* Assigned Flats */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Assigned Flats ({staff.assignedFlats?.length || 0})</Text>
@@ -188,6 +211,7 @@ export default function StaffDetailsModal({ visible, onClose, staff, onEdit }) {
                     <View style={styles.flatInfo}>
                       <Text style={styles.flatNumber}>{flat.flatNumber}</Text>
                       <Text style={styles.flatOwner}>{flat.memberName}</Text>
+                      
                     </View>
                   </View>
                 ))
