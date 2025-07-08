@@ -135,15 +135,23 @@ export default function StaffDetailsModal({ visible, onClose, staff, onEdit }) {
                 </View>
               )}
 
-              {staff.salary && (
-                <View style={styles.infoRow}>
-                  <Ionicons name="cash" size={20} color="#28a745" />
-                  <View style={styles.infoContent}>
-                    <Text style={styles.infoLabel}>Monthly Salary</Text>
-                    <Text style={styles.infoValue}>₹{staff.salary}</Text>
-                  </View>
-                </View>
-              )}
+              {staff.salary ? (
+  <View style={styles.infoRow}>
+    <Ionicons name="cash" size={20} color="#28a745" />
+    <View style={styles.infoContent}>
+      <Text style={styles.infoLabel}>Monthly Salary</Text>
+      <Text style={styles.infoValue}>₹{staff.salary}</Text>
+    </View>
+  </View>
+) : (
+  <View style={styles.infoRow}>
+    <Ionicons name="cash" size={20} color="#28a745" />
+    <View style={styles.infoContent}>
+      <Text style={styles.infoLabel}>Monthly Salary</Text>
+      <Text style={styles.infoValue}>N/A</Text>
+    </View>
+  </View>
+)}
 
               {staff.aadharNumber && (
                 <View style={styles.infoRow}>

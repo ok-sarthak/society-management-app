@@ -51,11 +51,14 @@ export default function ViewAllStaffModal({
     setLoading(true);
     try {
       const result = await staffService.getAllStaff();
-      if (result.success) {
+      if (result.success && Array.isArray(result.data)) {
         setStaffList(result.data);
+      } else {
+        setStaffList([]);
       }
     } catch (error) {
       console.error('Error loading staff:', error);
+      setStaffList([]);
     } finally {
       setLoading(false);
     }
@@ -65,52 +68,57 @@ export default function ViewAllStaffModal({
     setRefreshing(true);
     try {
       const result = await staffService.getAllStaff();
-      if (result.success) {
+      if (result.success && Array.isArray(result.data)) {
         setStaffList(result.data);
+      } else {
+        setStaffList([]);
       }
     } catch (error) {
       console.error('Error refreshing staff:', error);
+      setStaffList([]);
     } finally {
       setRefreshing(false);
     }
   };
 
   const applyFilters = () => {
-    let filtered = [...staffList];
+    let filtered = [...(staffList || [])];
 
     // Apply status filter
     if (selectedFilter === 'active') {
-      filtered = filtered.filter(staff => staff.isActive);
+      filtered = filtered.filter(staff => staff && staff.isActive === true);
     } else if (selectedFilter === 'inactive') {
-      filtered = filtered.filter(staff => !staff.isActive);
+      filtered = filtered.filter(staff => staff && staff.isActive !== true);
     } else if (selectedFilter !== 'all') {
       // Filter by staff type
-      filtered = filtered.filter(staff => staff.staffType === selectedFilter);
+      filtered = filtered.filter(staff => staff && staff.staffType === selectedFilter);
     }
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(staff =>
-        staff.name?.toLowerCase().includes(query) ||
-        staff.phoneNumber?.includes(query) ||
-        staff.staffType?.toLowerCase().includes(query) ||
-        staff.assignedFlats?.some(flat => 
-          flat.flatNumber?.toLowerCase().includes(query) ||
-          flat.memberName?.toLowerCase().includes(query)
+        staff && (
+          (staff.name || '').toLowerCase().includes(query) ||
+          (staff.phoneNumber || '').includes(query) ||
+          (staff.staffType || '').toLowerCase().includes(query) ||
+          staff.assignedFlats?.some(flat => 
+            (flat.flatNumber || '').toLowerCase().includes(query) ||
+            (flat.memberName || '').toLowerCase().includes(query)
+          )
         )
       );
     }
 
-    setFilteredStaff(filtered);
+    setFilteredStaff(filtered || []);
   };
 
   const getStatusColor = (isActive) => {
-    return isActive ? '#34C759' : '#FF3B30';
+    return isActive === true ? '#34C759' : '#FF3B30';
   };
 
   const getStatusText = (isActive) => {
-    return isActive ? 'Active' : 'Inactive';
+    return isActive === true ? 'Active' : 'Inactive';
   };
 
   const getStaffTypeIcon = (staffType) => {
@@ -132,7 +140,11 @@ export default function ViewAllStaffModal({
     }
   };
 
-  const renderStaffItem = ({ item }) => (
+  const renderStaffItem = ({ item }) => {
+    // Add safety check for item
+    if (!item) return null;
+    
+    return (
     <View style={styles.staffCard}>
       <View style={styles.staffHeader}>
         <View style={styles.staffInfo}>
@@ -144,8 +156,8 @@ export default function ViewAllStaffModal({
             />
           </View>
           <View style={styles.staffBasicInfo}>
-            <Text style={styles.staffName}>{item.name}</Text>
-            <Text style={styles.staffType}>{item.staffType}</Text>
+            <Text style={styles.staffName}>{item.name || 'Unknown Staff'}</Text>
+            <Text style={styles.staffType}>{item.staffType || 'Unknown Type'}</Text>
           </View>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.isActive) }]}>
@@ -156,7 +168,7 @@ export default function ViewAllStaffModal({
       <View style={styles.staffDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="call" size={14} color="#666" />
-          <Text style={styles.detailText}>{item.phoneNumber}</Text>
+          <Text style={styles.detailText}>{item.phoneNumber || 'N/A'}</Text>
         </View>
         {item.assignedFlats && item.assignedFlats.length > 0 && (
           <View style={styles.detailRow}>
@@ -166,32 +178,38 @@ export default function ViewAllStaffModal({
             </Text>
           </View>
         )}
-        {item.salary && (
-          <View style={styles.detailRow}>
-            <Ionicons name="card" size={14} color="#666" />
-            <Text style={styles.detailText}>₹{item.salary}/month</Text>
-          </View>
-        )}
+        {item.salary ? (
+  <View style={styles.detailRow}>
+    <Ionicons name="card" size={14} color="#666" />
+    <Text style={styles.detailText}>₹{item.salary}/month</Text>
+  </View>
+) : (
+  <View style={styles.detailRow}>
+    <Ionicons name="card" size={14} color="#666" />
+    <Text style={styles.detailText}>N/A</Text>
+  </View>
+)}
       </View>
 
       <View style={styles.staffActions}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => onViewDetails(item)}
+          onPress={() => onViewDetails && onViewDetails(item)}
         >
           <Ionicons name="eye" size={16} color="#007AFF" />
           <Text style={styles.actionButtonText}>View</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton]}
-          onPress={() => onEditStaff(item)}
+          onPress={() => onEditStaff && onEditStaff(item)}
         >
           <Ionicons name="create" size={16} color="#007AFF" />
           <Text style={styles.actionButtonText}>Edit</Text>
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   if (!visible) return null;
 
@@ -277,8 +295,8 @@ export default function ViewAllStaffModal({
               {filteredStaff.length} staff member{filteredStaff.length > 1 ? 's' : ''} found
             </Text>
             <FlatList
-              data={filteredStaff}
-              keyExtractor={(item) => item.id}
+              data={filteredStaff.filter(item => item && item.id)}
+              keyExtractor={(item, index) => item?.id || `staff-${index}`}
               renderItem={renderStaffItem}
               contentContainerStyle={styles.staffList}
               showsVerticalScrollIndicator={false}
