@@ -47,6 +47,7 @@ export default function StaffTab({ userData }) {
   const [checkInOutModalVisible, setCheckInOutModalVisible] = useState(false);
   const [viewAllStaffModalVisible, setViewAllStaffModalVisible] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const filters = [
     { id: 'all', name: 'All Staff', icon: 'people' },
@@ -81,6 +82,9 @@ export default function StaffTab({ userData }) {
       if (staffResult.success) {
         setStaffList(staffResult.data);
       }
+
+      // Increment refresh trigger to update ViewAllStaffModal
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error loading staff data:', error);
       Alert.alert('Error', 'Failed to load staff data');
@@ -477,7 +481,7 @@ export default function StaffTab({ userData }) {
           setSelectedStaff(staff);
           setStaffDetailsModalVisible(true);
         }}
-        refreshTrigger={0}
+        refreshTrigger={refreshTrigger}
       />
     </View>
   );
