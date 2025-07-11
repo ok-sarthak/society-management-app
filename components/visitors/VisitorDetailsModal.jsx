@@ -246,7 +246,7 @@ export default function VisitorDetailsModal({ visible, onClose, visitor, onCheck
             <TouchableOpacity
               style={styles.checkoutButton}
               onPress={() => {
-                console.log('Check out button pressed for visitor:', visitor.name);
+                // console.log('Check out button pressed for visitor:', visitor.name);
                 if (onCheckOut) {
                   onCheckOut(visitor);
                 } else {

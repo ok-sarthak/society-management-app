@@ -53,10 +53,6 @@ export default function StaffTab({ userData }) {
     { id: 'all', name: 'All Staff', icon: 'people' },
     { id: 'active', name: 'Active', icon: 'checkmark-circle' },
     { id: 'inactive', name: 'Inactive', icon: 'close-circle' },
-    { id: 'maid', name: 'Maid', icon: 'home' },
-    { id: 'cook', name: 'Cook', icon: 'restaurant' },
-    { id: 'driver', name: 'Driver', icon: 'car' },
-    { id: 'security', name: 'Security', icon: 'shield' },
   ];
 
   useEffect(() => {
@@ -390,6 +386,7 @@ export default function StaffTab({ userData }) {
           <TextInput
             style={styles.searchInput}
             placeholder="Search staff by name, phone, type, flat..."
+            placeholderTextColor="#8f9bb3"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -602,6 +599,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2e3a59',
     marginLeft: 12,
+    minHeight: 20,
   },
   filtersContainer: {
     paddingBottom: 16,

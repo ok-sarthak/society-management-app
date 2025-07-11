@@ -363,6 +363,10 @@ export default function PrimaryDashboard({ userData, onLogout }) {
     return userData?.status || 'inactive' // Default to active if no status provided
   }
 
+  const getUserName = () => {
+    return userData?.userName || 'Society Member Name' // Default name
+  }
+
   const getUserRole = () => {
     return userData?.role || 'Society Member Role' // Default role
   }
@@ -464,7 +468,7 @@ export default function PrimaryDashboard({ userData, onLogout }) {
               <View style={styles.headerLeft}>
                 <View style={styles.userInfo}>
                   <Text style={styles.welcomeText}>{welcomeGreeting()}</Text>
-                  <Text style={styles.userName}>{userData?.name || 'Society Name'}</Text>
+                  <Text style={styles.userName}>{getUserName() || 'Society Name'}</Text>
                   <Text style={styles.userRole}>{getUserRole() || 'Society Member Role'}</Text>
                 </View>
                 

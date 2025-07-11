@@ -14,12 +14,12 @@ import Animated, {
 
 // Import tab components
 import DashboardTab from './tabs/primary/DashboardTab/DashboardTab'
-import MaintenanceTab from './tabs/primary/MaintenanceTab/MaintenanceTab'
-import MembersTab from './tabs/primary/MembersTab/MembersTab'
-import StaffTab from './tabs/primary/StaffTab/StaffTab'
-import VisitorsTab from './tabs/primary/VisitorsTab/VisitorsTab'
+import MaintenanceTab from './tabs/secondary/MaintenanceTab/MaintenanceTab'
+import MembersTab from './tabs/secondary/MembersTab/MembersTab'
+import StaffTab from './tabs/secondary/StaffTab/StaffTab'
+import VisitorsTab from './tabs/secondary/VisitorsTab/VisitorsTab'
 
-export default function PrimaryDashboard({ userData, onLogout }) {
+export default function SecondaryDashboard({ userData, onLogout }) {
   const [selectedTab, setSelectedTab] = useState(0)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [isOnline, setIsOnline] = useState(true) // Start with true assumption
@@ -362,6 +362,10 @@ export default function PrimaryDashboard({ userData, onLogout }) {
   const getUserStatus = () => {
     return userData?.status || 'inactive' // Default to active if no status provided
   }
+  
+  const getUserName = () => {
+    return userData?.userName || 'Society Member Name' // Default name
+  }
 
   const getUserRole = () => {
     return userData?.role || 'Society Member Role' // Default role
@@ -464,7 +468,7 @@ export default function PrimaryDashboard({ userData, onLogout }) {
               <View style={styles.headerLeft}>
                 <View style={styles.userInfo}>
                   <Text style={styles.welcomeText}>{welcomeGreeting()}</Text>
-                  <Text style={styles.userName}>{userData?.name || 'Society Name'}</Text>
+                  <Text style={styles.userName}>{getUserName() || 'Society Name'}</Text>
                   <Text style={styles.userRole}>{getUserRole() || 'Society Member Role'}</Text>
                 </View>
                 

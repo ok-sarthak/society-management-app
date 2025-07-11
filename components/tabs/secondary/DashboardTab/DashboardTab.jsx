@@ -20,6 +20,10 @@ export default function DashboardTab({ userData, onTabChange }) {
     }
   };
 
+  const getUserName = () => {
+    return userData?.name || 'Secondary Administrator'; // Default name
+  };
+
   const handleExternalLink = (url, linkName) => {
     Alert.alert(
       "Leaving App",
@@ -38,15 +42,19 @@ export default function DashboardTab({ userData, onTabChange }) {
   };
 
   const handleContact = (type) => {
-    setContactModalVisible(false);
+    // setContactModalVisible(false);
     
     if (type === 'email') {
-      Linking.openURL('mailto:support@vacantvectors.tech?subject=Society Management App Support');
+      Linking.openURL('mailto:support@vacantvectors.in?subject=Society Management App Support');
     } else if (type === 'phone') {
       Linking.openURL('tel:+919876543210');
     } else if (type === 'whatsapp') {
-      Linking.openURL('whatsapp://send?phone=919876543210&text=Hello, I need help with Society Management App');
+      Linking.openURL('whatsapp://send?phone=919876543210&text=Hello, I need help with Society Hub');
     }
+
+    setTimeout(() => {
+    setContactModalVisible(false);
+  }, 100);
   };
 
   const SimpleCard = ({ title, subtitle, icon, gradient, onPress }) => {
@@ -198,6 +206,8 @@ export default function DashboardTab({ userData, onTabChange }) {
     );
   };
 
+
+
   const WelcomeHeader = () => {
     const getGreeting = () => {
       const hours = new Date().getHours();
@@ -217,7 +227,7 @@ export default function DashboardTab({ userData, onTabChange }) {
           <View style={styles.welcomeContent}>
             <View style={styles.welcomeText}>
               <Text style={styles.greeting}>{getGreeting()}</Text>
-              <Text style={styles.userName}>{userData?.name || 'Administrator'}</Text>
+              <Text style={styles.userName}>{getUserName() || 'Secondary Administrator'}</Text>
               <Text style={styles.welcomeSubtext}>Manage your society efficiently</Text>
             </View>
             <View style={styles.welcomeIcon}>
@@ -345,7 +355,7 @@ export default function DashboardTab({ userData, onTabChange }) {
 
               {/* Version Info */}
               <View style={styles.versionSection}>
-                <Text style={styles.versionText}>Version 1.0.0</Text>
+                <Text style={styles.versionText}>Version 1.0.1</Text>
                 <Text style={styles.copyrightText}>© 2025 Vacant Vectors</Text>
               </View>
             </LinearGradient>

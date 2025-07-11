@@ -15,7 +15,7 @@ import { visitorsService } from '../../services/visitorsService';
 import VisitorDetailsModal from './VisitorDetailsModal';
 
 export default function VisitorsHistoryModal({ visible, onClose, userData, onCheckOut }) {
-  console.log('VisitorsHistoryModal received onCheckOut:', onCheckOut);
+  // console.log('VisitorsHistoryModal received onCheckOut:', onCheckOut);
   
   const [visitors, setVisitors] = useState([]);
   const [filteredVisitors, setFilteredVisitors] = useState([]);
@@ -319,8 +319,8 @@ export default function VisitorsHistoryModal({ visible, onClose, userData, onChe
         onClose={() => setVisitorDetailsModalVisible(false)}
         visitor={selectedVisitor}
         onCheckOut={(visitor) => {
-          console.log('VisitorDetailsModal onCheckOut called with visitor:', visitor);
-          console.log('onCheckOut function available:', !!onCheckOut);
+          // console.log('VisitorDetailsModal onCheckOut called with visitor:', visitor);
+          // console.log('onCheckOut function available:', !!onCheckOut);
           setVisitorDetailsModalVisible(false); // Close the modal
           if (onCheckOut && typeof onCheckOut === 'function') {
             onCheckOut(visitor); // Call the parent-provided onCheckOut function

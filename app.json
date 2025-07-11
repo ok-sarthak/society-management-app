@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "society-management",
+    "name": "Society Hub",
     "slug": "society-management",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/PlaygroundImage.jpg",
     "scheme": "societymanagement",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/PlaygroundImage.jpg",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -26,14 +26,14 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/PlaygroundImage.jpg"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/PlaygroundImage.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

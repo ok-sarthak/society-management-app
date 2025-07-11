@@ -325,6 +325,7 @@ export default function VisitorsTab({ userData }) {
           <TextInput
             style={styles.searchInput}
             placeholder="Search check-in visitors by name, phone, flat..."
+            placeholderTextColor="#8f9bb3"
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCorrect={false}
@@ -379,7 +380,7 @@ export default function VisitorsTab({ userData }) {
               onClose={() => setVisitorsHistoryModalVisible(false)}
               userData={userData}
               onCheckOut={(visitor) => {
-                console.log('VisitorsTab handleCheckOut called from VisitorsHistoryModal:', visitor);
+                // console.log('VisitorsTab handleCheckOut called from VisitorsHistoryModal:', visitor);
                 handleCheckOut(visitor);
               }} // Pass handleCheckOut to history modal
             />
@@ -519,6 +520,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2e3a59',
     marginLeft: 12,
+    minHeight: 20,
   },
   listHeaderContainer: {
     paddingHorizontal: 20,
