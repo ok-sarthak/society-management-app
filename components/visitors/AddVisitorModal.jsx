@@ -1,22 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { visitorsService } from '../../services/visitorsService';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 export default function AddVisitorModal({ visible, onClose, onSuccess, userData }) {
   const [formData, setFormData] = useState({
@@ -34,10 +28,11 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
     notes: ''
   });
   const [loading, setLoading] = useState(false);
-  const [towers, setTowers] = useState([]);
-  const [flats, setFlats] = useState([]);
-  const [showTowerSelector, setShowTowerSelector] = useState(false);
   const [showFlatSelector, setShowFlatSelector] = useState(false);
+  const [flats, setFlats] = useState([]);
+  const [filteredFlats, setFilteredFlats] = useState([]);
+  const [flatSearchQuery, setFlatSearchQuery] = useState('');
+  const [loadingFlats, setLoadingFlats] = useState(false);
 
   const idProofTypes = [
     { id: 'aadhar', name: 'Aadhaar Card' },
@@ -62,10 +57,44 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
 
   useEffect(() => {
     if (visible) {
-      loadTowers();
+      loadAllFlats();
       resetForm();
     }
   }, [visible]);
+
+  useEffect(() => {
+    filterFlats();
+  }, [flats, flatSearchQuery, filterFlats]);
+
+  const loadAllFlats = async () => {
+    setLoadingFlats(true);
+    try {
+      const result = await visitorsService.getAllFlats();
+      if (result.success) {
+        setFlats(result.data.filter(flat => flat.status === 'active'));
+      }
+    } catch (error) {
+      console.error('Error loading flats:', error);
+    } finally {
+      setLoadingFlats(false);
+    }
+  };
+
+  const filterFlats = useCallback(() => {
+    if (!flatSearchQuery.trim()) {
+      setFilteredFlats(flats);
+      return;
+    }
+
+    const query = flatSearchQuery.toLowerCase();
+    const filtered = flats.filter(flat =>
+      flat.flatNumber.toLowerCase().includes(query) ||
+      flat.ownerName.toLowerCase().includes(query) ||
+      flat.tower.toLowerCase().includes(query) ||
+      flat.phone.includes(query)
+    );
+    setFilteredFlats(filtered);
+  }, [flats, flatSearchQuery]);
 
   const resetForm = () => {
     setFormData({
@@ -82,50 +111,30 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
       numberOfVisitors: '1',
       notes: ''
     });
-    setFlats([]);
+    setFlatSearchQuery('');
   };
 
-  const loadTowers = async () => {
-    try {
-      const result = await visitorsService.getAllTowers();
-      if (result.success) {
-        setTowers(result.data);
-      }
-    } catch (error) {
-      console.error('Error loading towers:', error);
-    }
-  };
-
-  const loadFlats = async (selectedTower) => {
-    try {
-      const result = await visitorsService.getFlatsByTower(selectedTower);
-      if (result.success) {
-        setFlats(result.data);
-      }
-    } catch (error) {
-      console.error('Error loading flats:', error);
-      Alert.alert('Error', 'Failed to load flats for selected tower');
-    }
-  };
-
-  const handleTowerSelect = (tower) => {
-    setFormData({ ...formData, tower, flatNumber: '', ownerName: '', ownerPhone: '' });
-    setShowTowerSelector(false);
-    loadFlats(tower);
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleFlatSelect = (flat) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
+      tower: flat.tower,
       flatNumber: flat.flatNumber,
       ownerName: flat.ownerName,
       ownerPhone: flat.phone
-    });
+    }));
     setShowFlatSelector(false);
+    setFlatSearchQuery('');
   };
 
   const validateForm = () => {
-    const required = ['name', 'phone', 'purpose', 'tower', 'flatNumber'];
+    const required = ['name', 'phone', 'purpose', 'flatNumber'];
     for (let field of required) {
       if (!formData[field].trim()) {
         Alert.alert('Error', `Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
@@ -160,84 +169,17 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
           'Visitor has been checked in successfully!',
           [{ text: 'OK', onPress: onSuccess }]
         );
+        onClose();
+        resetForm();
       } else {
         Alert.alert('Error', result.error || 'Failed to add visitor');
       }
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
-
-  const TowerSelectorModal = () => (
-    <Modal
-      visible={showTowerSelector}
-      animationType="slide"
-      presentationStyle="pageSheet"
-    >
-      <View style={styles.selectorContainer}>
-        <View style={styles.selectorHeader}>
-          <Text style={styles.selectorTitle}>Select Tower</Text>
-          <TouchableOpacity onPress={() => setShowTowerSelector(false)}>
-            <Ionicons name="close" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-        
-        <FlatList
-          data={towers}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.selectorItem}
-              onPress={() => handleTowerSelect(item)}
-            >
-              <Text style={styles.selectorItemText}>Tower {item}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-    </Modal>
-  );
-
-  const FlatSelectorModal = () => (
-  <Modal
-    visible={showFlatSelector}
-    animationType="slide"
-    presentationStyle="pageSheet"
-  >
-    <View style={styles.selectorContainer}>
-      <View style={styles.selectorHeader}>
-        <Text style={styles.selectorTitle}>Select Flat</Text>
-        <TouchableOpacity onPress={() => setShowFlatSelector(false)}>
-          <Ionicons name="close" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-      
-      <FlatList
-        data={flats}
-        keyExtractor={(item, index) => `${item.tower}-${item.flatNumber}-${index}`} // Ensure unique keys
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.flatSelectorItem}
-            onPress={() => handleFlatSelect(item)}
-          >
-            <View style={styles.flatInfo}>
-              <Text style={styles.flatNumber}>{item.flatNumber}</Text>
-              <Text style={styles.flatOwner}>{item.ownerName}</Text>
-              <Text style={styles.flatPhone}>{item.phone}</Text>
-            </View>
-            <View style={[
-              styles.statusIndicator,
-              { backgroundColor: item.status === 'active' ? '#28a745' : '#dc3545' }
-            ]} />
-          </TouchableOpacity>
-        )}
-      />
-    </View>
-  </Modal>
-);
 
   return (
     <Modal
@@ -245,18 +187,15 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <KeyboardAvoidingView 
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Add Visitor</Text>
+          <Text style={styles.headerTitle}>Add Visitor</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#666" />
+            <Ionicons name="close" size={24} color="#000" />
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Visitor Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Visitor Information</Text>
@@ -266,7 +205,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                onChangeText={(value) => handleInputChange('name', value)}
                 placeholder="Enter visitor's full name"
               />
             </View>
@@ -276,7 +215,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
               <TextInput
                 style={styles.input}
                 value={formData.phone}
-                onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                onChangeText={(value) => handleInputChange('phone', value)}
                 placeholder="Enter 10-digit phone number"
                 keyboardType="phone-pad"
                 maxLength={10}
@@ -293,7 +232,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
                       styles.purposeChip,
                       formData.purpose === purpose && styles.purposeChipSelected
                     ]}
-                    onPress={() => setFormData({ ...formData, purpose })}
+                    onPress={() => handleInputChange('purpose', purpose)}
                   >
                     <Text style={[
                       styles.purposeChipText,
@@ -312,7 +251,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
                 <TextInput
                   style={styles.input}
                   value={formData.vehicleNumber}
-                  onChangeText={(text) => setFormData({ ...formData, vehicleNumber: text.toUpperCase() })}
+                  onChangeText={(value) => handleInputChange('vehicleNumber', value.toUpperCase())}
                   placeholder="MH01AB1234"
                   autoCapitalize="characters"
                 />
@@ -323,7 +262,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
                 <TextInput
                   style={styles.input}
                   value={formData.numberOfVisitors}
-                  onChangeText={(text) => setFormData({ ...formData, numberOfVisitors: text })}
+                  onChangeText={(value) => handleInputChange('numberOfVisitors', value)}
                   placeholder="1"
                   keyboardType="numeric"
                   maxLength={2}
@@ -346,7 +285,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
                       styles.idProofChip,
                       formData.idProofType === type.id && styles.idProofChipSelected
                     ]}
-                    onPress={() => setFormData({ ...formData, idProofType: type.id })}
+                    onPress={() => handleInputChange('idProofType', type.id)}
                   >
                     <Text style={[
                       styles.idProofChipText,
@@ -364,7 +303,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
               <TextInput
                 style={styles.input}
                 value={formData.idProofNumber}
-                onChangeText={(text) => setFormData({ ...formData, idProofNumber: text })}
+                onChangeText={(value) => handleInputChange('idProofNumber', value)}
                 placeholder="Enter ID proof number"
               />
             </View>
@@ -372,45 +311,39 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
 
           {/* Destination Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Destination Information</Text>
-            
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-                <Text style={styles.label}>Tower *</Text>
-                <TouchableOpacity
-                  style={[styles.input, styles.selector]}
-                  onPress={() => setShowTowerSelector(true)}
-                >
-                  <Text style={[styles.selectorText, !formData.tower && styles.placeholder]}>
-                    {formData.tower ? `Tower ${formData.tower}` : 'Select Tower'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-                <Text style={styles.label}>Flat Number *</Text>
-                <TouchableOpacity
-                  style={[styles.input, styles.selector]}
-                  onPress={() => formData.tower ? setShowFlatSelector(true) : Alert.alert('Info', 'Please select a tower first')}
-                >
-                  <Text style={[styles.selectorText, !formData.flatNumber && styles.placeholder]}>
-                    {formData.flatNumber || 'Select Flat'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Destination *</Text>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowFlatSelector(true)}
+              >
+                <Ionicons name="add" size={20} color="#007AFF" />
+                <Text style={styles.selectButtonText}>Select Flat</Text>
+              </TouchableOpacity>
             </View>
 
-            {formData.ownerName && (
-              <View style={styles.ownerInfo}>
-                <View style={styles.ownerCard}>
-                  <Ionicons name="person" size={20} color="#667eea" />
-                  <View style={styles.ownerDetails}>
-                    <Text style={styles.ownerName}>{formData.ownerName}</Text>
-                    <Text style={styles.ownerPhone}>{formData.ownerPhone}</Text>
+            {formData.flatNumber ? (
+              <View style={styles.selectedFlat}>
+                <View style={styles.flatInfo}>
+                  <View style={styles.flatHeader}>
+                    <Text style={styles.flatNumber}>Flat {formData.flatNumber}</Text>
+                    <Text style={styles.towerName}>Tower {formData.tower}</Text>
                   </View>
+                  <Text style={styles.ownerName}>{formData.ownerName}</Text>
+                  <Text style={styles.ownerPhone}>{formData.ownerPhone}</Text>
                 </View>
+                <TouchableOpacity
+                  onPress={() => setFormData(prev => ({ ...prev, tower: '', flatNumber: '', ownerName: '', ownerPhone: '' }))}
+                  style={styles.removeButton}
+                >
+                  <Ionicons name="close-circle" size={20} color="#FF3B30" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="home-outline" size={48} color="#C7C7CC" />
+                <Text style={styles.emptyStateText}>No destination selected</Text>
+                <Text style={styles.emptyStateSubtext}>Tap &quot;Select Flat&quot; to choose visitor&apos;s destination</Text>
               </View>
             )}
 
@@ -419,7 +352,7 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.notes}
-                onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                onChangeText={(value) => handleInputChange('notes', value)}
                 placeholder="Any additional notes..."
                 multiline
                 numberOfLines={3}
@@ -430,20 +363,112 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
         </ScrollView>
 
         <View style={styles.footer}>
+          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.disabledButton]}
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Adding Visitor...' : 'Check In Visitor'}
+              {loading ? 'Adding...' : 'Check In Visitor'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <TowerSelectorModal />
-        <FlatSelectorModal />
-      </KeyboardAvoidingView>
+        {/* Flat Selection Modal */}
+        <Modal
+          visible={showFlatSelector}
+          animationType="slide"
+          presentationStyle="pageSheet"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Destination Flat</Text>
+              <TouchableOpacity
+                onPress={() => setShowFlatSelector(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by flat number, tower, owner name, or phone"
+                value={flatSearchQuery}
+                onChangeText={setFlatSearchQuery}
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+              {flatSearchQuery.length > 0 && (
+                <TouchableOpacity 
+                  onPress={() => setFlatSearchQuery('')}
+                  style={styles.clearButton}
+                >
+                  <Ionicons name="close-circle" size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {loadingFlats ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading flats...</Text>
+              </View>
+            ) : (
+              <ScrollView style={styles.flatsList} showsVerticalScrollIndicator={false}>
+                {filteredFlats.length === 0 ? (
+                  <View style={styles.emptyResults}>
+                    <Ionicons name="search" size={48} color="#C7C7CC" />
+                    <Text style={styles.emptyResultsText}>No flats found</Text>
+                    <Text style={styles.emptyResultsSubtext}>Try adjusting your search criteria</Text>
+                  </View>
+                ) : (
+                  filteredFlats.map((flat, index) => (
+                    <TouchableOpacity
+                      key={`${flat.tower}-${flat.flatNumber}-${index}`}
+                      style={styles.flatItem}
+                      onPress={() => handleFlatSelect(flat)}
+                    >
+                      <View style={styles.flatItemIcon}>
+                        <Ionicons name="home" size={20} color="#007AFF" />
+                      </View>
+                      <View style={styles.flatItemInfo}>
+                        <View style={styles.flatItemHeader}>
+                          <Text style={styles.flatItemNumber}>Flat {flat.flatNumber}</Text>
+                          <Text style={styles.flatItemTower}>Tower {flat.tower}</Text>
+                        </View>
+                        <Text style={styles.flatItemOwner}>{flat.ownerName}</Text>
+                        <Text style={styles.flatItemPhone}>{flat.phone}</Text>
+                      </View>
+                      <View style={[
+                        styles.statusIndicator,
+                        { backgroundColor: flat.status === 'active' ? '#28a745' : '#dc3545' }
+                      ]}>
+                        <Text style={styles.statusText}>
+                          {flat.status === 'active' ? 'Active' : 'Inactive'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            )}
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => setShowFlatSelector(false)}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </Modal>
   );
 }
@@ -451,46 +476,47 @@ export default function AddVisitorModal({ visible, onClose, onSuccess, userData 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F2F2F7',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E5E5EA',
   },
-  title: {
+  headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontWeight: '600',
+    color: '#000',
   },
   closeButton: {
     padding: 8,
   },
-  scrollView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   section: {
-    backgroundColor: '#fff',
+    marginTop: 20,
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    padding: 20,
+    padding: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontWeight: '600',
+    color: '#000',
     marginBottom: 16,
   },
   inputGroup: {
@@ -498,18 +524,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontWeight: '500',
+    color: '#000',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: '#E5E5EA',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#2c3e50',
+    backgroundColor: '#FFF',
   },
   textArea: {
     height: 80,
@@ -519,169 +544,317 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  selector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  selectorText: {
-    fontSize: 16,
-    color: '#2c3e50',
-  },
-  placeholder: {
-    color: '#adb5bd',
-  },
   purposeContainer: {
     marginTop: 8,
   },
   purposeChip: {
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F2F2F7',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
     marginRight: 8,
   },
   purposeChipSelected: {
-    backgroundColor: '#667eea',
-    borderColor: '#667eea',
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
   },
   purposeChipText: {
     fontSize: 14,
-    color: '#2c3e50',
+    fontWeight: '500',
+    color: '#000',
   },
   purposeChipTextSelected: {
-    color: '#fff',
+    color: '#FFF',
   },
   idProofContainer: {
     marginTop: 8,
   },
   idProofChip: {
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F2F2F7',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
     marginRight: 8,
   },
   idProofChipSelected: {
-    backgroundColor: '#28a745',
-    borderColor: '#28a745',
+    backgroundColor: '#28A745',
+    borderColor: '#28A745',
   },
   idProofChipText: {
     fontSize: 12,
-    color: '#2c3e50',
+    fontWeight: '500',
+    color: '#000',
   },
   idProofChipTextSelected: {
-    color: '#fff',
+    color: '#FFF',
   },
-  ownerInfo: {
-    marginBottom: 16,
-  },
-  ownerCard: {
+  selectButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#667eea',
   },
-  ownerDetails: {
-    marginLeft: 12,
-  },
-  ownerName: {
+  selectButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontWeight: '500',
+    color: '#007AFF',
+    marginLeft: 4,
   },
-  ownerPhone: {
-    fontSize: 14,
-    color: '#6c757d',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
-  },
-  submitButton: {
-    backgroundColor: '#667eea',
+  selectedFlat: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#F8F9FA',
     borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  selectorContainer: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  selectorHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  selectorTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  selectorItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f7',
-  },
-  selectorItemText: {
-    fontSize: 16,
-    color: '#2c3e50',
-  },
-  flatSelectorItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f7',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    marginBottom: 16,
   },
   flatInfo: {
     flex: 1,
   },
+  flatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   flatNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginRight: 8,
   },
-  flatOwner: {
+  towerName: {
     fontSize: 14,
-    color: '#6c757d',
-    marginTop: 2,
+    fontWeight: '500',
+    color: '#666',
+    backgroundColor: '#E5E5EA',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
-  flatPhone: {
+  ownerName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
+    marginBottom: 2,
+  },
+  ownerPhone: {
+    fontSize: 14,
+    color: '#666',
+  },
+  removeButton: {
+    padding: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    marginBottom: 16,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#8E8E93',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 20,
+  },
+  footer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5EA',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 8,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  submitButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F2F2F7',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginVertical: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
+  },
+  clearButton: {
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  flatsList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  emptyResults: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyResultsText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#8E8E93',
+    marginTop: 12,
+  },
+  emptyResultsSubtext: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  flatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+  },
+  flatItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  flatItemInfo: {
+    flex: 1,
+  },
+  flatItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  flatItemNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginRight: 8,
+  },
+  flatItemTower: {
     fontSize: 12,
-    color: '#8f9bb3',
-    marginTop: 2,
+    fontWeight: '500',
+    color: '#666',
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  flatItemOwner: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
+    marginBottom: 2,
+  },
+  flatItemPhone: {
+    fontSize: 12,
+    color: '#666',
   },
   statusIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  statusText: {
+    fontSize: 10,
+    color: '#FFF',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  modalFooter: {
+    padding: 20,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5EA',
+  },
+  doneButton: {
+    paddingVertical: 16,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
   },
 });

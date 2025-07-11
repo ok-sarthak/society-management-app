@@ -228,6 +228,40 @@ export const visitorsService = {
     }
   },
 
+  // Get all flats for selection
+  async getAllFlats() {
+    try {
+      // Import membersService to get member flats
+      const { membersService } = await import('./membersService');
+      const membersResult = await membersService.getAllMembers();
+      
+      if (!membersResult.success) {
+        return { success: false, error: 'Could not fetch member data' };
+      }
+      
+      const flats = membersResult.data
+        .map(member => ({
+          flatNumber: member.flatNumber,
+          tower: member.tower,
+          ownerName: member.name,
+          phone: member.phone,
+          status: member.status
+        }))
+        .sort((a, b) => {
+          // Sort by tower first, then by flat number
+          if (a.tower !== b.tower) {
+            return a.tower.localeCompare(b.tower);
+          }
+          return a.flatNumber.localeCompare(b.flatNumber);
+        });
+      
+      return { success: true, data: flats };
+    } catch (error) {
+      console.error('Error getting all flats:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Log visitor activity
   async logVisitorActivity(visitorId, activityType, data) {
     try {
