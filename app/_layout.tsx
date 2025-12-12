@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import AppNavigator from "../components/AppNavigator.jsx";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -25,16 +24,13 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-load fonts, make any API calls you need to do here
         if (fontsLoaded) {
-          // Artificially delay for 1 second to simulate a slow loading experience
           await new Promise(resolve => setTimeout(resolve, 1000));
           setAppIsReady(true);
         }
       } catch (e) {
         console.warn(e);
       } finally {
-        // Tell the application to render
         await SplashScreen.hideAsync();
       }
     }

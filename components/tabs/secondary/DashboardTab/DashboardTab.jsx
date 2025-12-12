@@ -45,7 +45,7 @@ export default function DashboardTab({ userData, onTabChange }) {
     // setContactModalVisible(false);
     
     if (type === 'email') {
-      Linking.openURL('mailto:support@vacantvectors.in?subject=Society Management App Support');
+      Linking.openURL('mailto:sarthak@vacantvectors.com?subject=Society Management App Support');
     } else if (type === 'phone') {
       Linking.openURL('tel:+919876543210');
     } else if (type === 'whatsapp') {
@@ -137,7 +137,7 @@ export default function DashboardTab({ userData, onTabChange }) {
                   </View>
                   <View style={styles.modalButtonContent}>
                     <Text style={styles.modalButtonText}>Send Email</Text>
-                    <Text style={styles.modalButtonSubtext}>support@vacantvectors.tech</Text>
+                    <Text style={styles.modalButtonSubtext}>sarthak@vacantvectors.com</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#667eea" />
                 </LinearGradient>
@@ -319,7 +319,7 @@ export default function DashboardTab({ userData, onTabChange }) {
               {/* Developer Section */}
               <TouchableOpacity 
                 style={styles.developerSection}
-                onPress={() => handleExternalLink('https://vacantvectors.tech', 'Vacant Vectors')}
+                onPress={() => handleExternalLink('https://vacantvectors.com', 'Vacant Vectors')}
               >
                 <Ionicons name="code-slash" size={20} color="#667eea" />
                 <Text style={styles.developerText}>Developed by Vacant Vectors</Text>
@@ -329,7 +329,7 @@ export default function DashboardTab({ userData, onTabChange }) {
               <View style={styles.linksSection}>
                 <TouchableOpacity
                   style={styles.linkButton}
-                  onPress={() => handleExternalLink('https://vacantvectors.tech/terms', 'Terms & Conditions')}
+                  onPress={() => handleExternalLink('https://vacantvectors.com/terms', 'Terms & Conditions')}
                 >
                   <Text style={styles.linkText}>Terms & Conditions</Text>
                 </TouchableOpacity>
@@ -338,7 +338,7 @@ export default function DashboardTab({ userData, onTabChange }) {
                 
                 <TouchableOpacity
                   style={styles.linkButton}
-                  onPress={() => handleExternalLink('https://vacantvectors.tech/privacy', 'Privacy Policy')}
+                  onPress={() => handleExternalLink('https://vacantvectors.com/privacy', 'Privacy Policy')}
                 >
                   <Text style={styles.linkText}>Privacy Policy</Text>
                 </TouchableOpacity>
@@ -347,7 +347,7 @@ export default function DashboardTab({ userData, onTabChange }) {
                 
                 <TouchableOpacity
                   style={styles.linkButton}
-                  onPress={() => handleExternalLink('https://vacantvectors.tech/cookies', 'Cookie Policy')}
+                  onPress={() => handleExternalLink('https://vacantvectors.com/cookies', 'Cookie Policy')}
                 >
                   <Text style={styles.linkText}>Cookies</Text>
                 </TouchableOpacity>

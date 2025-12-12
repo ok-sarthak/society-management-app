@@ -458,8 +458,6 @@ export default function AuthScreen({ onLogin }) {
     }
   }, [])
 
-  // ... rest of your existing JSX code remains the same
-  // (The UI components don't need to change, just the authentication logic)
 
   if (showForgotPassword) {
     return (
@@ -731,11 +729,11 @@ export default function AuthScreen({ onLogin }) {
               By signing in, you agree to our{' '}
               <Text 
                 style={{ color: '#667eea', textDecorationLine: 'underline' }}
-                onPress={() => handleExternalLink('https://vacantvectors.tech/terms', 'Terms of Service')}
+                onPress={() => handleExternalLink('https://vacantvectors.com/terms', 'Terms of Service')}
               >Terms of Service</Text> and{' '}
               <Text 
                 style={{ color: '#667eea', textDecorationLine: 'underline' }}
-                onPress={() => handleExternalLink('https://vacantvectors.tech/privacy', 'Privacy Policy')}
+                onPress={() => handleExternalLink('https://vacantvectors.com/privacy', 'Privacy Policy')}
               >Privacy Policy</Text>
             </Text>
           </Animated.View>
@@ -762,7 +760,6 @@ export default function AuthScreen({ onLogin }) {
   )
 }
 
-// ... rest of your existing styles remain the same
 
 const styles = StyleSheet.create({
   container: {
