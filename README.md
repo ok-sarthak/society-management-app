@@ -28,7 +28,6 @@
 - [Module Documentation](#-module-documentation)
 - [Project Structure](#-project-structure)
 - [Services](#-services)
-- [Contributing](#-contributing)
 - [Contact](#-contact)
 
 ---
@@ -406,7 +405,7 @@ eas build --platform all
 ## 📞 Contact & Support
  
 **Developer**: Sarthak Chakraborty  
-**Email**: <sarthak@vacantvectors.in>   
+**Email**: <sarthak@vacantvectors.com>   
 **Website**: [sarthakchakraborty.in](https://sarthakchakraborty.in)  
 **GitHub**: [@ok-sarthak](https://github.com/ok-sarthak)
 
@@ -421,7 +420,7 @@ eas build --platform all
 
 <div align="center">
 
-**Built with ❤️ by [Sarthak Chakraborty](https://sarthakchakraborty.in)**
+**Built by [Sarthak Chakraborty](https://sarthakchakraborty.in)**
 
 [⬆ Back to Top](#-society-hub---complete-society-management-application)
 
